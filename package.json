@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "stock": "node src/stock/index.js",
-    "stock:dev": "node --watch src/stock/index.js"
+    "stock:dev": "node --watch src/stock/index.js",
+    "stock:report": "node src/stock/report.js"
   },
   "engines": {
     "node": ">=18"

@@ -58,6 +58,9 @@ export async function check(item) {
     available,
     label: item.label || `TCIN ${item.tcin}`,
     detail: where,
+    // The fulfillment endpoint carries stock, not price. Left null for now so
+    // markup shows "—"; add a pdp price call later to populate it.
+    price: null,
     url: `https://www.target.com/p/A-${item.tcin}`,
   };
 }

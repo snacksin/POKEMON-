@@ -38,6 +38,7 @@ export async function check(item) {
     available,
     label: item.label || product.name,
     detail: `${where}${price}`,
+    price: Number.isFinite(product.salePrice) ? product.salePrice : null,
     url: product.url || `https://www.bestbuy.com/site/${item.sku}.p`,
   };
 }

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { notify } from './notify.js';
+import { markupLabel, money } from './markup.js';
 import * as bestbuy from './sources/bestbuy.js';
 import * as target from './sources/target.js';
 
@@ -45,7 +46,9 @@ async function pollOnce() {
 
         // Fire a notification only on the transition into stock.
         if (result.available && was === false) {
-          notify(`🟢 IN STOCK: ${result.label}`, `${source.name} — ${result.detail}`, result.url);
+          const markup = markupLabel(item.msrp, result.price);
+          const priceLine = `${money(result.price)} (MSRP ${money(item.msrp)} · ${markup})`;
+          notify(`🟢 IN STOCK: ${result.label}`, `${source.name} — ${result.detail} · ${priceLine}`, result.url);
         } else if (was === undefined) {
           console.log(`[${source.name}] tracking "${result.label}" (currently ${result.available ? 'in stock' : 'out'}).`);
         }

@@ -159,6 +159,26 @@ src/stock/
   stays in stock.
 - Every hit is also logged, so `pm2 logs pokemon-stock` keeps a history.
 
+### MSRP & markup tracking
+Each watchlist item takes an `msrp` (the official sticker price). When the
+checker pulls a live price it computes the **markup %** automatically:
+
+- In **alerts**: `$88.74 (MSRP $39.95 · +122% over MSRP)` so you instantly know
+  if a "drop" is really a reseller markup.
+- In a **table report** — run it anytime:
+  ```bash
+  npm run stock:report
+  ```
+  ```
+  Source    Product                   MSRP    Live    Markup           Stock
+  ────────  ────────────────────────  ──────  ──────  ───────────────  ──────────
+  Best Buy  Scarlet & Violet 151 ETB  $39.95  $88.74  +122% over MSRP  ✅ online
+  Best Buy  Prismatic Evolutions ETB  $49.99  $49.99  at MSRP          ✅ online
+  Target    Booster Bundle            $39.95  —       —                ❌ out
+  ```
+  (Target shows `—` for price/markup for now — its stock endpoint doesn't carry
+  price; a price call can be added later.)
+
 ### Adding more sources later
 Each retailer is a plugin exporting `name`, `isConfigured()`, and
 `check(item)`. Drop a new file in `src/stock/sources/`, register it in the
