@@ -1,9 +1,9 @@
 {
-  "_comment": "Products to watch. 'msrp' is the official sticker price (used to compute markup %). 'bestbuy' uses the official API (needs BESTBUY_API_KEY). 'target' is experimental (RedSky). storeId = your local Jacksonville Target for in-store checks.",
+  "_comment": "Products to watch. 'msrp' is the official sticker price (used to compute markup %). 'bestbuy' uses the official API (needs BESTBUY_API_KEY + the NUMERIC sku from the product page). 'target' is experimental (RedSky); storeId = your local Jacksonville Target for in-store checks (leave blank for shipping-only).",
   "bestbuy": [
-    { "sku": "REPLACE_WITH_SKU", "label": "Example: Scarlet & Violet 151 ETB", "msrp": 39.95 }
+    { "sku": "REPLACE_WITH_SKU", "label": "Pitch Black ETB — get the numeric SKU from bestbuy.com/product/.../JJG2TL8J45", "msrp": 49.99 }
   ],
   "target": [
-    { "tcin": "REPLACE_WITH_TCIN", "label": "Example: Pokémon Booster Bundle", "msrp": 39.95, "storeId": "", "zip": "32256" }
+    { "tcin": "1011483406", "label": "Mega Evolution: Pitch Black ETB", "msrp": 49.99, "storeId": "", "zip": "32256" }
   ]
 }
