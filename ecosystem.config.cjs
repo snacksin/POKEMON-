@@ -14,5 +14,16 @@ module.exports = {
         NODE_ENV: 'production',
       },
     },
+    {
+      name: 'pokemon-stock',
+      script: 'src/stock/index.js',
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 5000,
+      watch: false,
+      env: {
+        NODE_ENV: 'production',
+      },
+    },
   ],
 };

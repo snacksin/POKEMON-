@@ -123,6 +123,57 @@ sudo pmset -a sleep 0 disablesleep 1
 Useful pm2 commands: `pm2 logs pokemon-bot`, `pm2 restart pokemon-bot`,
 `pm2 stop pokemon-bot`.
 
+## Option B: retailer stock-checker (`npm run stock`)
+
+A separate, pluggable engine that polls retailers directly and pops a **macOS
+notification** the moment an item flips from out-of-stock to in-stock. It runs
+independently of the Discord bot.
+
+```
+src/stock/
+├── index.js            # polling engine (transition detection, no repeat spam)
+├── notify.js           # macOS notification (osascript) + console fallback
+└── sources/
+    ├── bestbuy.js       # OFFICIAL Best Buy API (reliable) — needs BESTBUY_API_KEY
+    └── target.js        # UNOFFICIAL Target RedSky (experimental) — in-store Jax checks
+```
+
+### Setup
+1. **Best Buy key (recommended):** sign up free at
+   <https://developer.bestbuy.com/>, then put the key in `.env` as
+   `BESTBUY_API_KEY`.
+2. **Add products to watch** in `src/data/watchlist.json`:
+   - Best Buy: find the **SKU** on the product's bestbuy.com page.
+   - Target: find the **TCIN** in the target.com URL (`.../A-1004055984`), and
+     your local Jacksonville **store id** for in-store checks.
+3. Run it:
+   ```bash
+   npm run stock          # foreground
+   # or under pm2 (already in ecosystem.config.cjs as "pokemon-stock"):
+   pm2 start ecosystem.config.cjs
+   ```
+
+### How alerting works
+- Polls every `STOCK_POLL_SECONDS` (default 120s; minimum 30 to stay polite).
+- Notifies **once** on each out→in-stock transition — no repeat spam while it
+  stays in stock.
+- Every hit is also logged, so `pm2 logs pokemon-stock` keeps a history.
+
+### Adding more sources later
+Each retailer is a plugin exporting `name`, `isConfigured()`, and
+`check(item)`. Drop a new file in `src/stock/sources/`, register it in the
+`SOURCES` map in `src/stock/index.js`, and add its items to the watchlist.
+Candidates: Walmart, GameStop, a paid Target data API, or a Playwright-based
+checker for Pokémon Center (no public API).
+
+### Caveats
+- **Target (RedSky)** is undocumented and its public key rotates — if it starts
+  failing, grab a fresh key from target.com network requests and set
+  `TARGET_API_KEY`.
+- **Pokémon Center** has no public API and strong bot protection; it's not
+  included and isn't reliably automatable.
+- Respect each retailer's terms and don't hammer their endpoints.
+
 ## Editing the calendar by hand
 `src/data/drops.json` is just JSON. Each entry:
 ```json

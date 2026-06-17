@@ -6,7 +6,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "stock": "node src/stock/index.js",
+    "stock:dev": "node --watch src/stock/index.js"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,9 @@
+{
+  "_comment": "Products to watch. Add real SKUs/TCINs. 'bestbuy' uses the official API (needs BESTBUY_API_KEY). 'target' is experimental (RedSky). storeId = your local Jacksonville Target for in-store checks.",
+  "bestbuy": [
+    { "sku": "REPLACE_WITH_SKU", "label": "Example: Pokémon TCG ETB" }
+  ],
+  "target": [
+    { "tcin": "REPLACE_WITH_TCIN", "label": "Example: Pokémon Booster Bundle", "storeId": "", "zip": "32256" }
+  ]
+}
