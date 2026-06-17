@@ -1,0 +1,57 @@
+{
+  "_comment": "Online retailers + local Jacksonville, FL pickup spots. Edit freely. 'online' entries are websites to camp for box drops; 'local' entries are in-store pickup around Jacksonville.",
+  "online": [
+    {
+      "name": "Pokémon Center (official)",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "Best source for Elite Trainer Boxes and exclusive collections."
+    },
+    {
+      "name": "Target",
+      "url": "https://www.target.com/c/trading-cards",
+      "notes": "Online drops + in-store. Watch for 'ship to store' / pickup options."
+    },
+    {
+      "name": "Best Buy",
+      "url": "https://www.bestbuy.com/site/searchpage.jsp?st=pokemon+tcg",
+      "notes": "Booster bundles and collection boxes; sells out fast."
+    },
+    {
+      "name": "Walmart",
+      "url": "https://www.walmart.com/search?q=pokemon%20tcg",
+      "notes": "Frequent online restocks, often late night ET."
+    },
+    {
+      "name": "Costco",
+      "url": "https://www.costco.com/CatalogSearch?keyword=pokemon",
+      "notes": "Bulk tins/collections; membership required."
+    }
+  ],
+  "local": [
+    {
+      "name": "Target — River City Marketplace",
+      "address": "13740 Beach Blvd / River City area, Jacksonville, FL",
+      "notes": "Check trading card aisle on restock mornings (Tue/Fri)."
+    },
+    {
+      "name": "Walmart Supercenter — Jacksonville",
+      "address": "Multiple locations (e.g. Normandy Blvd, Atlantic Blvd)",
+      "notes": "Electronics counter often holds cards behind glass — ask staff."
+    },
+    {
+      "name": "GameStop — Jacksonville",
+      "address": "Multiple Jacksonville locations",
+      "notes": "Carries ETBs and collection boxes; call ahead for stock."
+    },
+    {
+      "name": "Best Buy — Jacksonville (St. Johns Town Center)",
+      "address": "4860 Big Island Dr, Jacksonville, FL 32246",
+      "notes": "In-store pickup for online orders."
+    },
+    {
+      "name": "Local card shops (LCS)",
+      "address": "Search 'Pokemon cards Jacksonville FL' on Google Maps",
+      "notes": "Independent shops often get singles + sealed; build a relationship for early picks."
+    }
+  ]
+}

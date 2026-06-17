@@ -1,0 +1,18 @@
+{
+  "name": "pokemon-drops-monitor",
+  "version": "0.1.0",
+  "description": "A read-only Discord bot that watches Pokémon TCG drop-alert servers and records detected drops (online + Jacksonville, FL in-store) into a local calendar. Never sends messages.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "_comment": "Edit this file to track upcoming Pokémon TCG drops. 'date' is ISO 8601 in your local timezone offset. 'type' is 'online' or 'instore'. The bot reads this file live, so you can update it without restarting (commands re-read on each call).",
+  "drops": [
+    {
+      "id": "sv-prismatic-evolutions-restock",
+      "name": "Prismatic Evolutions — Elite Trainer Box restock",
+      "date": "2026-06-20T11:00:00-04:00",
+      "type": "online",
+      "retailer": "Pokémon Center",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "Drops usually go live mid-morning ET. Have payment info saved."
+    },
+    {
+      "id": "target-tcg-tuesday-restock",
+      "name": "Target weekly TCG restock",
+      "date": "2026-06-23T08:00:00-04:00",
+      "type": "instore",
+      "retailer": "Target",
+      "url": "https://www.target.com",
+      "notes": "Restock trucks often unload Tue/Fri mornings. Check the trading card aisle early."
+    },
+    {
+      "id": "bestbuy-booster-bundle-drop",
+      "name": "Best Buy online Booster Bundle drop",
+      "date": "2026-07-01T10:00:00-04:00",
+      "type": "online",
+      "retailer": "Best Buy",
+      "url": "https://www.bestbuy.com",
+      "notes": "Add to cart fast; stock sells out in minutes."
+    },
+    {
+      "id": "new-set-preorder",
+      "name": "Next main set — pre-orders open",
+      "date": "2026-07-11T12:00:00-04:00",
+      "type": "online",
+      "retailer": "Pokémon Center",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "Replace this with the real set name and date when announced."
+    }
+  ]
+}
