@@ -181,6 +181,13 @@ Alerts are texted to your phone via Twilio. One-time setup:
 The console log and an optional macOS popup still fire too, so the checker works
 even before SMS is configured.
 
+### MSRP reference
+`src/data/msrp-reference.json` is a lookup of standard US MSRP by product
+**type** (booster pack, bundle, ETB, booster box, tins, etc.). It's anchored on
+the $4.49 booster pack — multi-pack products are `pack count × $4.49`. Use it to
+fill in the `msrp` field when you add products to the watchlist. `confidence:
+high` = pack-math/stable; `approx` = varies by set — verify on PokemonCenter.com.
+
 ### MSRP & markup tracking
 Each watchlist item takes an `msrp` (the official sticker price). When the
 checker pulls a live price it computes the **markup %** automatically:

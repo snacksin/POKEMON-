@@ -1,0 +1,24 @@
+{
+  "_comment": "Standard US MSRP by Pokémon TCG sealed-product TYPE (boxes/packs, not singles). Pokémon doesn't publish one official price list; these are anchored on the $4.49 booster pack (multi-pack products = pack count x $4.49) plus retail/community consensus as of 2026-06. ALWAYS verify a specific set's price on PokemonCenter.com — some sets/exclusives differ. 'confidence': high = pack-math or stable; approx = varies by set/product.",
+  "anchor_pack_msrp": 4.49,
+  "products": [
+    { "type": "Booster Pack",            "packs": 1,  "msrp": 4.49,   "confidence": "high",   "notes": "Base unit. Some newer packs creeping to $4.99." },
+    { "type": "Sleeved Booster",         "packs": 1,  "msrp": 4.99,   "confidence": "approx", "notes": "Single pack in a display sleeve." },
+    { "type": "Checklane / Single Blister", "packs": 1, "msrp": 5.99, "confidence": "approx", "notes": "1 pack + promo card + coin." },
+    { "type": "3-Pack Blister",          "packs": 3,  "msrp": 14.99,  "confidence": "approx", "notes": "3 packs + promo (+ sometimes coin)." },
+    { "type": "Booster Bundle",          "packs": 6,  "msrp": 26.94,  "confidence": "high",   "notes": "6 packs, no extras (= 6 x $4.49)." },
+    { "type": "Booster Box",             "packs": 36, "msrp": 161.64, "confidence": "high",   "notes": "36 packs (= 36 x $4.49). Rarely sold at retail; resellers inflate heavily." },
+    { "type": "Build & Battle Box",      "packs": 4,  "msrp": 22.99,  "confidence": "high",   "notes": "Prerelease kit: 4 packs + 40-card ready-to-play deck." },
+    { "type": "Build & Battle Stadium",  "packs": 8,  "msrp": 44.99,  "confidence": "high",   "notes": "Larger prerelease kit: ~8 packs + decks/accessories." },
+    { "type": "Elite Trainer Box (ETB)", "packs": 9,  "msrp": 49.99,  "confidence": "high",   "notes": "8-9 packs + sleeves, dice, energy, box. Older SwSh-era ETBs were ~$39.99-44.99." },
+    { "type": "Elite Trainer Box (Pokémon Center exclusive)", "packs": 11, "msrp": 59.99, "confidence": "approx", "notes": "ETB contents + 2 extra packs + stamped promo. PokemonCenter.com only; $54.99-$59.99." },
+    { "type": "Mini Tin",                "packs": 2,  "msrp": 9.99,   "confidence": "approx", "notes": "2 packs + art card. Some sources cite higher." },
+    { "type": "Collector's Tin / ex Tin","packs": 4,  "msrp": 24.99,  "confidence": "approx", "notes": "4-5 packs + foil/jumbo promo." },
+    { "type": "ex Premium Collection",   "packs": 6,  "msrp": 29.99,  "confidence": "approx", "notes": "Packs + promo(s) + accessory (sleeves/coin/oversize card)." },
+    { "type": "Special / Premium Figure Collection", "packs": 6, "msrp": 44.99, "confidence": "approx", "notes": "Includes a sculpted figure; $39.99-$49.99 by product." },
+    { "type": "Collection Box (V/ex box)", "packs": 4, "msrp": 21.99, "confidence": "approx", "notes": "Single ex/V promo + ~4 packs; $19.99-$24.99." },
+    { "type": "Battle Deck",             "packs": 0,  "msrp": 14.99,  "confidence": "approx", "notes": "Ready-to-play 60-card deck; no boosters." },
+    { "type": "Binder Collection",       "packs": 4,  "msrp": 24.99,  "confidence": "approx", "notes": "Collector binder + packs + promo." },
+    { "type": "Ultra Premium Collection (UPC)", "packs": 16, "msrp": 119.99, "confidence": "approx", "notes": "Flagship box; varies $119.99-$169.99 by set." }
+  ]
+}
