@@ -159,6 +159,28 @@ src/stock/
   stays in stock.
 - Every hit is also logged, so `pm2 logs pokemon-stock` keeps a history.
 
+### SMS alerts (Twilio)
+Alerts are texted to your phone via Twilio. One-time setup:
+1. Make a free account at <https://console.twilio.com/> and get a phone number.
+2. From the Console dashboard, copy your **Account SID** and **Auth Token**.
+3. Fill these in `.env`:
+   ```
+   TWILIO_ACCOUNT_SID=ACxxxxxxxx
+   TWILIO_AUTH_TOKEN=xxxxxxxx
+   TWILIO_FROM=+19045551234     # your Twilio number
+   ALERT_TO_PHONE=+19045555678  # your cell, where texts go
+   ```
+4. Verify it works:
+   ```bash
+   npm run stock:test-sms
+   ```
+   You should get a text within a few seconds. (On a free trial Twilio account
+   you must first verify your cell number in the Console, and texts are prefixed
+   with a trial notice.)
+
+The console log and an optional macOS popup still fire too, so the checker works
+even before SMS is configured.
+
 ### MSRP & markup tracking
 Each watchlist item takes an `msrp` (the official sticker price). When the
 checker pulls a live price it computes the **markup %** automatically:
