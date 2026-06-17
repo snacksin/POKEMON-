@@ -63,6 +63,66 @@ Set `MONITOR_CHANNEL_IDS` in `.env` to a comma-separated list of channel IDs
 (turn on Discord **Developer Mode**, right-click a channel → Copy Channel ID).
 Leave it blank to watch every channel the bot can read.
 
+## Getting real drop alerts into your bot (the legit way)
+
+You **cannot** add this bot to a Pokémon community you don't run — adding a bot
+needs the **Manage Server** permission on that server, and most communities ban
+member-added bots. Trying to scrape a server you don't control also breaks
+Discord's Terms of Service.
+
+The supported way to pull another community's alerts in is Discord's built-in
+**Follow Announcement Channel** feature, which mirrors their posts into *your*
+server, where your bot is allowed to read:
+
+1. Create your own Discord server (free) and add the bot to it.
+2. Join a restock/drop community that has a public **Announcement channel**
+   (📢 icon).
+3. Open that announcement channel → click the channel name (or the
+   bell-with-arrow **Follow** button) → choose a channel in **your** server to
+   mirror the posts into.
+4. The bot reads the mirrored alerts in your server and saves any drops it finds
+   to `src/data/drops.json`.
+
+Notes:
+- Not every server exposes a followable announcement channel — some disable it.
+- You can also just have humans paste drop links into your own server; the bot
+  will detect and log those too.
+- A future "retailer stock-checker" mode (polling Pokémon Center / Target /
+  Best Buy directly, no other Discord servers needed) is planned.
+
+## Running 24/7 on a Mac mini (or any always-on machine)
+
+A Discord gateway bot must run continuously, so use an always-on machine (a Mac
+mini is ideal), not a serverless host like Vercel.
+
+```bash
+# one-time install (macOS)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install node
+
+# get the code
+git clone https://github.com/snacksin/POKEMON-.git
+cd POKEMON-
+git checkout claude/discord-server-integration-wbjh66
+npm install
+cp .env.example .env        # paste your DISCORD_TOKEN, then save
+
+# run it continuously with pm2 (restarts on crash + on reboot)
+npm install -g pm2
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup                 # run the one command it prints
+```
+
+Keep the Mac awake so the bot never drops offline:
+
+```bash
+sudo pmset -a sleep 0 disablesleep 1
+```
+
+Useful pm2 commands: `pm2 logs pokemon-bot`, `pm2 restart pokemon-bot`,
+`pm2 stop pokemon-bot`.
+
 ## Editing the calendar by hand
 `src/data/drops.json` is just JSON. Each entry:
 ```json
