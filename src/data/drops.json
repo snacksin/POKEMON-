@@ -1,41 +1,59 @@
 {
-  "_comment": "Edit this file to track upcoming Pokémon TCG drops. 'date' is ISO 8601 in your local timezone offset. 'type' is 'online' or 'instore'. The bot reads this file live, so you can update it without restarting (commands re-read on each call).",
+  "_comment": "Upcoming Pokémon TCG drops. 'date' is ISO 8601 (Eastern). 'type' is 'online' or 'instore'. Real data last verified 2026-06-17 from pokemon.com & community trackers — update times/dates as retailers confirm. The bot reads this live.",
   "drops": [
     {
-      "id": "sv-prismatic-evolutions-restock",
-      "name": "Prismatic Evolutions — Elite Trainer Box restock",
-      "date": "2026-06-20T11:00:00-04:00",
+      "id": "pitch-black-preorders-live",
+      "name": "Mega Evolution: Pitch Black — pre-orders LIVE",
+      "date": "2026-06-17T09:00:00-04:00",
       "type": "online",
       "retailer": "Pokémon Center",
       "url": "https://www.pokemoncenter.com",
-      "notes": "Drops usually go live mid-morning ET. Have payment info saved."
+      "notes": "Pre-orders opened June 10 and are live NOW (~37-day window, closing around the July 17 release). ETB, Booster Bundle & Booster Box available. The Pokémon Center ETB is exclusive: stamped Zarude illustration-rare promo + 2 extra packs. Also at Amazon/TCGplayer."
     },
     {
-      "id": "target-tcg-tuesday-restock",
-      "name": "Target weekly TCG restock",
-      "date": "2026-06-23T08:00:00-04:00",
+      "id": "pitch-black-prerelease-events",
+      "name": "Pitch Black — Pre-release events (local game stores)",
+      "date": "2026-07-04T10:00:00-04:00",
       "type": "instore",
-      "retailer": "Target",
-      "url": "https://www.target.com",
-      "notes": "Restock trucks often unload Tue/Fri mornings. Check the trading card aisle early."
+      "retailer": "Local Game Stores",
+      "url": "https://www.pokemon.com/us/play-pokemon/pokemon-events",
+      "notes": "Pre-release events run July 4–12 at participating stores — build a 40-card deck from a Build & Battle Box and play early. Digital cards hit Pokémon TCG Live on July 16."
     },
     {
-      "id": "bestbuy-booster-bundle-drop",
-      "name": "Best Buy online Booster Bundle drop",
-      "date": "2026-07-01T10:00:00-04:00",
+      "id": "mega-evolution-pitch-black-release",
+      "name": "Mega Evolution: Pitch Black — worldwide release",
+      "date": "2026-07-17T09:00:00-04:00",
       "type": "online",
-      "retailer": "Best Buy",
-      "url": "https://www.bestbuy.com",
-      "notes": "Add to cart fast; stock sells out in minutes."
-    },
-    {
-      "id": "new-set-preorder",
-      "name": "Next main set — pre-orders open",
-      "date": "2026-07-11T12:00:00-04:00",
-      "type": "online",
-      "retailer": "Pokémon Center",
+      "retailer": "Pokémon Center / Target / Best Buy / Walmart",
       "url": "https://www.pokemoncenter.com",
-      "notes": "Replace this with the real set name and date when announced."
+      "notes": "Main set launch. Features Mega Darkrai ex, Mega Zeraora ex, Mega Chandelure ex, Mega Excadrill ex. Available online and in stores the same day — be ready at open; popular boxes sell out fast. (Online drop time approximate.)"
+    },
+    {
+      "id": "30th-celebration-release",
+      "name": "30th Celebration — worldwide simultaneous release",
+      "date": "2026-09-16T09:00:00-04:00",
+      "type": "online",
+      "retailer": "Pokémon Center / major retailers",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "Huge anniversary set — the first-ever global same-day launch. Every card is foil, every pack includes a Pikachu (1 of 30 artists), plus 30 classic reprints (incl. Base Set Charizard) and a new 'Futuristic Rare' rarity. Expect heavy demand — line up at open."
+    },
+    {
+      "id": "premium-deck-espeon-umbreon-release",
+      "name": "Premium Deck Set: Espeon & Umbreon",
+      "date": "2026-09-16T09:00:00-04:00",
+      "type": "online",
+      "retailer": "Pokémon Center / major retailers",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "Launches the same day as 30th Celebration (Sept 16). Eevee-evolution collectors will compete with anniversary-set demand — plan accordingly."
+    },
+    {
+      "id": "storm-emerald-english-release",
+      "name": "Storm Emerald (Mega Rayquaza ex) — English release [TENTATIVE]",
+      "date": "2026-09-25T09:00:00-04:00",
+      "type": "online",
+      "retailer": "Pokémon Center / major retailers",
+      "url": "https://www.pokemoncenter.com",
+      "notes": "⚠️ TENTATIVE DATE — English release not officially confirmed. Japanese version drops July 31; English expected ~September based on typical delays. Headlined by Mega Rayquaza ex. Update this entry once the official date is announced."
     }
   ]
 }
