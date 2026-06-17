@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>Pokémon MSRP Tracker — Release Command Center</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎴</text></svg>" />
+
+  <!-- React + Babel (CDN, zero build step). Portable to Vite/Vercel later. -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { ink: '#0b1020', panel: '#121a30', edge: '#1f2b4d' },
+          fontFamily: { mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body { background: #0b1020; }
+    /* subtle starfield-ish backdrop */
+    body {
+      background-image:
+        radial-gradient(1200px 600px at 80% -10%, rgba(99,102,241,0.12), transparent),
+        radial-gradient(900px 500px at 0% 0%, rgba(244,63,94,0.10), transparent);
+      background-attachment: fixed;
+    }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #1f2b4d; border-radius: 6px; }
+  </style>
+</head>
+<body class="text-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useMemo, useCallback } = React;
+
+    /* =========================================================================
+       DATA LAYER
+       v1 uses RELEASES + RETAILERS. STORES / PREDICTOR are stubbed now so that
+       v2 (drop-window predictor + live stock) and v3 (Jacksonville run planner)
+       bolt on without a rewrite. Dates are hardcoded and Claude-maintained.
+       ========================================================================= */
+
+    // ---- Priority taxonomy ------------------------------------------------
+    const PRIORITY = {
+      TOP:      { id: 'TOP',      label: 'Top Priority',   rank: 0, badge: 'bg-rose-500/20 text-rose-200 ring-rose-400/40',     dot: 'bg-rose-400' },
+      FLAGSHIP: { id: 'FLAGSHIP', label: 'Flagship',       rank: 1, badge: 'bg-amber-500/20 text-amber-200 ring-amber-400/40',   dot: 'bg-amber-400' },
+      MSRP:     { id: 'MSRP',     label: 'MSRP-friendly',  rank: 2, badge: 'bg-emerald-500/20 text-emerald-200 ring-emerald-400/40', dot: 'bg-emerald-400' },
+      STANDARD: { id: 'STANDARD', label: 'Standard',       rank: 3, badge: 'bg-slate-500/20 text-slate-200 ring-slate-400/30',   dot: 'bg-slate-400' },
+    };
+
+    // ---- Retailers (v1: window hints. Stub fields for v2 predictor) -------
+    // weekdays: 0=Sun .. 6=Sat. timeLabel is human; v2 will compute exact UTC windows.
+    const RETAILERS = [
+      {
+        id: 'walmart', name: 'Walmart', short: 'WMT',
+        color: 'text-sky-300', chip: 'bg-sky-500/15 ring-sky-400/30',
+        weekdays: [3, 4], timeLabel: '10:00 AM ET',
+        note: 'Exclusives gated to Walmart+ members — your biggest edge.',
+        walmartPlusGated: true,
+        // --- v2 stub ---
+        predictor: { confidence: null, lastSeenDrops: [], avgRestockGapDays: null },
+      },
+      {
+        id: 'target', name: 'Target', short: 'TGT',
+        color: 'text-red-300', chip: 'bg-red-500/15 ring-red-400/30',
+        weekdays: [5], timeLabel: '~3:00 AM ET',
+        note: 'Mobile add-to-cart → desktop checkout trick.',
+        walmartPlusGated: false,
+        predictor: { confidence: null, lastSeenDrops: [], avgRestockGapDays: null },
+      },
+      {
+        id: 'pokemoncenter', name: 'Pokémon Center', short: 'PC',
+        color: 'text-indigo-300', chip: 'bg-indigo-500/15 ring-indigo-400/30',
+        weekdays: [2, 4], timeLabel: '~10:00 AM PT',
+        note: 'Irregular & hardest to predict. Lean on Discord alerts.',
+        walmartPlusGated: false,
+        predictor: { confidence: null, lastSeenDrops: [], avgRestockGapDays: null },
+      },
+      {
+        id: 'bestbuy', name: 'Best Buy', short: 'BBY',
+        color: 'text-yellow-300', chip: 'bg-yellow-500/15 ring-yellow-400/30',
+        weekdays: [5], timeLabel: 'Friday',
+        note: 'Leans Friday.',
+        walmartPlusGated: false,
+        predictor: { confidence: null, lastSeenDrops: [], avgRestockGapDays: null },
+      },
+      {
+        id: 'costco', name: 'Costco', short: 'CST',
+        color: 'text-orange-300', chip: 'bg-orange-500/15 ring-orange-400/30',
+        weekdays: [1, 2, 3, 4, 5], timeLabel: 'Random weekday',
+        note: 'Unpredictable — set-and-forget alerts only.',
+        walmartPlusGated: false,
+        predictor: { confidence: null, lastSeenDrops: [], avgRestockGapDays: null },
+      },
+    ];
+    const RETAILER_BY_ID = Object.fromEntries(RETAILERS.map(r => [r.id, r]));
+
+    // ---- Discord alert sources (referenced by the prep checklist) ---------
+    const DISCORDS = [
+      { name: 'Pokemon Restocks & News', url: 'https://discord.gg/pkmnalerts', note: '66k+ members, 100+ retailers' },
+      { name: 'TrackaLacker', url: '', note: 'Backup — preorder/reprint news' },
+    ];
+
+    // ---- 2026 Release Calendar (English/US). Dates hardcoded. -------------
+    // date: ISO (street date). Countdown targets local midnight of that date.
+    const RELEASES = [
+      {
+        id: 'asc-heroes',
+        date: '2026-01-30',
+        name: 'Mega Evolution — Ascended Heroes',
+        priority: 'FLAGSHIP',
+        products: ['Booster boxes', 'ETBs'],
+        retailers: ['walmart', 'target', 'pokemoncenter', 'bestbuy', 'costco'],
+        notes: '',
+      },
+      {
+        id: 'pokemon-day-2026',
+        date: '2026-01-30',
+        name: 'Pokémon Day 2026 Collection',
+        priority: 'STANDARD',
+        products: ['Special collection'],
+        retailers: ['pokemoncenter', 'walmart', 'target'],
+        notes: '',
+      },
+      {
+        id: 'perfect-order',
+        date: '2026-03-27',
+        name: 'Mega Evolution — Perfect Order',
+        priority: 'FLAGSHIP',
+        products: ['Booster boxes', 'ETBs'],
+        retailers: ['walmart', 'target', 'pokemoncenter', 'bestbuy', 'costco'],
+        notes: '',
+      },
+      {
+        id: 'asc-heroes-bundle',
+        date: '2026-04-24',
+        name: 'Ascended Heroes Booster Bundle',
+        priority: 'MSRP',
+        products: ['Booster bundle'],
+        retailers: ['walmart', 'target', 'costco'],
+        notes: 'MSRP-friendly — easier grab, lower scalper pressure.',
+      },
+      {
+        id: 'chaos-rising',
+        date: '2026-05-22',
+        name: 'Mega Evolution — Chaos Rising',
+        priority: 'FLAGSHIP',
+        products: ['Booster boxes', 'ETBs'],
+        retailers: ['walmart', 'target', 'pokemoncenter', 'bestbuy', 'costco'],
+        notes: '',
+      },
+      {
+        id: 'first-partner-s2',
+        date: '2026-06-19',
+        name: 'First Partner Illustration Collection — Series 2',
+        priority: 'STANDARD',
+        products: ['Illustration collection'],
+        retailers: ['pokemoncenter', 'walmart', 'target'],
+        notes: '',
+      },
+      {
+        id: 'pitch-black',
+        date: '2026-07-17',
+        name: 'Mega Evolution — Pitch Black',
+        priority: 'FLAGSHIP',
+        products: ['Booster boxes', 'ETBs'],
+        retailers: ['walmart', 'target', 'pokemoncenter', 'bestbuy', 'costco'],
+        notes: '',
+      },
+      {
+        id: 'mega-forces-tins',
+        date: '2026-08-28',
+        name: 'Mega Forces Tins',
+        priority: 'STANDARD',
+        products: ['Tins'],
+        retailers: ['walmart', 'target', 'bestbuy', 'costco'],
+        notes: '',
+      },
+      {
+        id: '30th-celebration',
+        date: '2026-09-16',
+        name: '30th Celebration Set + Espeon & Umbreon Premium Deck',
+        priority: 'TOP',
+        products: ['30th Celebration set', 'Espeon & Umbreon Premium Deck'],
+        retailers: ['walmart', 'target', 'pokemoncenter', 'bestbuy', 'costco'],
+        notes: 'Toughest grab of the year. Plan hard: every account warm, every alert armed, multiple retailers staged.',
+      },
+    ];
+
+    // ---- Prep checklist template (online-weighted) ------------------------
+    // Applied per-release; state persisted in localStorage.
+    const CHECKLIST_TEMPLATE = [
+      { id: 'wplus',    label: 'Walmart+ membership active',              hint: 'Gates the 10 AM ET exclusives.' },
+      { id: 'login',    label: 'Logged in to retailer accounts',         hint: 'Walmart, Target, PC, Best Buy.' },
+      { id: 'payment',  label: 'Payment method saved / autofill ready',  hint: 'No typing card numbers at drop time.' },
+      { id: 'address',  label: 'Shipping address confirmed',             hint: 'Default address set & correct.' },
+      { id: 'alerts',   label: 'Discord alerts armed',                   hint: 'pkmnalerts + TrackaLacker, notifs on.' },
+      { id: 'window',   label: 'Drop window noted / alarm set',          hint: 'Set an alarm for the likely window.' },
+    ];
+
+    /* =========================================================================
+       v3 STUB — Jacksonville in-store run planner (NOT rendered in v1).
+       Kept here so the data shape is locked for later.
+       ========================================================================= */
+    const JAX_STORES_STUB = [
+      // { id, retailerId, name, address, zip, hours, lastRestockLog: [], coords: {lat,lng} }
+    ];
+
+    /* =========================================================================
+       HELPERS
+       ========================================================================= */
+    const MS_DAY = 86400000;
+    const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function parseLocalDate(iso) {
+      const [y, m, d] = iso.split('-').map(Number);
+      return new Date(y, m - 1, d, 0, 0, 0, 0);
+    }
+
+    function startOfToday() {
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function fmtReleaseDate(iso) {
+      const d = parseLocalDate(iso);
+      return `${WEEKDAY_NAMES[d.getDay()]} ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+    }
+
+    // Next occurrence (>= today) of any of the given weekdays.
+    function nextWindow(weekdays) {
+      const today = startOfToday();
+      for (let i = 0; i < 8; i++) {
+        const cand = new Date(today.getTime() + i * MS_DAY);
+        if (weekdays.includes(cand.getDay())) {
+          return { date: cand, inDays: i };
+        }
+      }
+      return null;
+    }
+
+    function relWindowLabel(inDays) {
+      if (inDays === 0) return 'today';
+      if (inDays === 1) return 'tomorrow';
+      return `in ${inDays}d`;
+    }
+
+    // Live countdown breakdown from now to target midnight.
+    function countdownTo(iso) {
+      const target = parseLocalDate(iso).getTime();
+      const diff = target - Date.now();
+      const past = diff <= 0;
+      const abs = Math.abs(diff);
+      const days = Math.floor(abs / MS_DAY);
+      const hours = Math.floor((abs % MS_DAY) / 3600000);
+      const mins = Math.floor((abs % 3600000) / 60000);
+      const secs = Math.floor((abs % 60000) / 1000);
+      return { past, days, hours, mins, secs };
+    }
+
+    /* =========================================================================
+       PERSISTENCE  (localStorage — survives reloads, no backend)
+       ========================================================================= */
+    const LS_KEY = 'pkmn-msrp-tracker-v1';
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+    function saveState(state) {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    /* =========================================================================
+       UI COMPONENTS
+       ========================================================================= */
+
+    function Pill({ className = '', children }) {
+      return (
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${className}`}>
+          {children}
+        </span>
+      );
+    }
+
+    function Countdown({ iso, released }) {
+      const [, tick] = useState(0);
+      useEffect(() => {
+        const t = setInterval(() => tick(x => x + 1), 1000);
+        return () => clearInterval(t);
+      }, []);
+      const c = countdownTo(iso);
+
+      if (released || c.past) {
+        return (
+          <div className="text-right">
+            <div className="text-xs uppercase tracking-wider text-slate-500">Status</div>
+            <div className="font-mono text-sm text-slate-400">Released</div>
+          </div>
+        );
+      }
+
+      const Unit = ({ v, l }) => (
+        <div className="flex flex-col items-center px-1.5">
+          <span className="font-mono text-xl sm:text-2xl font-bold tabular-nums text-white leading-none">
+            {String(v).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-slate-500 mt-1">{l}</span>
+        </div>
+      );
+
+      const urgent = c.days <= 7;
+      return (
+        <div className="text-right">
+          <div className="text-xs uppercase tracking-wider text-slate-500 mb-1">Drops in</div>
+          <div className={`flex items-end justify-end rounded-lg px-1 py-1 ${urgent ? 'bg-rose-500/10 ring-1 ring-inset ring-rose-400/30' : ''}`}>
+            <Unit v={c.days} l="days" />
+            <span className="text-slate-600 pb-3">:</span>
+            <Unit v={c.hours} l="hrs" />
+            <span className="text-slate-600 pb-3">:</span>
+            <Unit v={c.mins} l="min" />
+            <span className="text-slate-600 pb-3">:</span>
+            <Unit v={c.secs} l="sec" />
+          </div>
+        </div>
+      );
+    }
+
+    function RetailerWindows({ retailerIds }) {
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {retailerIds.map(id => {
+            const r = RETAILER_BY_ID[id];
+            if (!r) return null;
+            const w = nextWindow(r.weekdays);
+            return (
+              <div
+                key={id}
+                title={`${r.name}: ${r.timeLabel}. ${r.note}`}
+                className={`group inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ring-1 ring-inset ${r.chip}`}
+              >
+                <span className={`font-semibold ${r.color}`}>{r.name}</span>
+                {r.walmartPlusGated && <span title="Walmart+ gated">🔒</span>}
+                <span className="text-slate-400">
+                  {w ? `${WEEKDAY_NAMES[w.date.getDay()]} ${relWindowLabel(w.inDays)} · ${r.timeLabel}` : r.timeLabel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function Checklist({ releaseId, state, onToggle }) {
+      const checks = state[releaseId] || {};
+      const done = CHECKLIST_TEMPLATE.filter(s => checks[s.id]).length;
+      const total = CHECKLIST_TEMPLATE.length;
+      const pct = Math.round((done / total) * 100);
+
+      return (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs uppercase tracking-wider text-slate-500">Prep checklist</span>
+            <span className="text-xs font-mono text-slate-400">{done}/{total}</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-edge/60 overflow-hidden mb-3">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${pct === 100 ? 'bg-emerald-400' : 'bg-indigo-400'}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {CHECKLIST_TEMPLATE.map(step => {
+              const on = !!checks[step.id];
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => onToggle(releaseId, step.id)}
+                  className={`flex items-start gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition
+                    ${on ? 'bg-emerald-500/10 ring-1 ring-inset ring-emerald-400/30' : 'bg-edge/40 hover:bg-edge/70 ring-1 ring-inset ring-transparent'}`}
+                >
+                  <span className={`mt-0.5 flex h-4 w-4 flex-none items-center justify-center rounded border text-[10px]
+                    ${on ? 'bg-emerald-400 border-emerald-400 text-ink' : 'border-slate-500 text-transparent'}`}>
+                    ✓
+                  </span>
+                  <span className="min-w-0">
+                    <span className={on ? 'text-slate-300 line-through decoration-slate-600' : 'text-slate-200'}>{step.label}</span>
+                    <span className="block text-[11px] text-slate-500">{step.hint}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function ReleaseCard({ release, state, onToggle, released }) {
+      const p = PRIORITY[release.priority];
+      const isTop = release.priority === 'TOP';
+      return (
+        <div
+          className={`relative rounded-2xl border bg-panel/80 backdrop-blur p-4 sm:p-5 shadow-lg shadow-black/20 transition
+            ${released ? 'opacity-55 grayscale border-edge/60' : 'border-edge'}
+            ${isTop && !released ? 'ring-2 ring-rose-400/50 border-rose-400/40' : ''}`}
+        >
+          {isTop && !released && (
+            <div className="absolute -top-2.5 left-4 rounded-full bg-rose-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow">
+              ★ Plan Hard
+            </div>
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill className={p.badge}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${p.dot}`} /> {p.label}
+                </Pill>
+                {released && <Pill className="bg-slate-700/40 text-slate-400 ring-slate-500/30">Released</Pill>}
+              </div>
+              <h3 className="mt-2 text-base sm:text-lg font-semibold text-white leading-snug">{release.name}</h3>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-400">
+                <span className="font-mono text-slate-300">{fmtReleaseDate(release.date)}, 2026</span>
+                {release.products.length > 0 && (
+                  <span className="text-slate-500">· {release.products.join(' · ')}</span>
+                )}
+              </div>
+              {release.notes && (
+                <p className={`mt-2 text-sm ${isTop ? 'text-rose-200/90' : 'text-slate-400'}`}>{release.notes}</p>
+              )}
+            </div>
+            <div className="flex-none">
+              <Countdown iso={release.date} released={released} />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="text-xs uppercase tracking-wider text-slate-500 mb-1.5">Next likely online window</div>
+            <RetailerWindows retailerIds={release.retailers} />
+          </div>
+
+          <Checklist releaseId={release.id} state={state} onToggle={onToggle} />
+        </div>
+      );
+    }
+
+    function Header({ stats }) {
+      return (
+        <header className="mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🎴</span>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                Pokémon MSRP Tracker
+              </h1>
+              <p className="text-sm text-slate-400">Release Command Center · 2026 · v1</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+            <Stat label="Upcoming" value={stats.upcoming} accent="text-indigo-300" />
+            <Stat label="Next drop" value={stats.nextLabel} accent="text-amber-300" small />
+            <Stat label="Flagship+ left" value={stats.flagshipLeft} accent="text-rose-300" />
+          </div>
+        </header>
+      );
+    }
+
+    function Stat({ label, value, accent, small }) {
+      return (
+        <div className="rounded-xl border border-edge bg-panel/60 px-3 py-2.5">
+          <div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div>
+          <div className={`font-bold ${small ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'} ${accent} truncate`}>{value}</div>
+        </div>
+      );
+    }
+
+    function FilterBar({ months, monthFilter, setMonthFilter, priorityFilter, setPriorityFilter, showPast, setShowPast, pastCount }) {
+      const btn = (active) =>
+        `rounded-lg px-3 py-1.5 text-sm font-medium transition whitespace-nowrap ${
+          active ? 'bg-indigo-500 text-white shadow' : 'bg-panel/70 text-slate-300 ring-1 ring-inset ring-edge hover:bg-edge/70'
+        }`;
+      return (
+        <div className="mb-5 space-y-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Month</div>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              <button className={btn(monthFilter === 'ALL')} onClick={() => setMonthFilter('ALL')}>All</button>
+              {months.map(m => (
+                <button key={m} className={btn(monthFilter === m)} onClick={() => setMonthFilter(m)}>
+                  {MONTH_NAMES[m]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Priority</div>
+              <div className="flex gap-1.5 flex-wrap">
+                <button className={btn(priorityFilter === 'ALL')} onClick={() => setPriorityFilter('ALL')}>All</button>
+                {Object.values(PRIORITY).map(p => (
+                  <button key={p.id} className={btn(priorityFilter === p.id)} onClick={() => setPriorityFilter(p.id)}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none rounded-lg bg-panel/70 px-3 py-1.5 ring-1 ring-inset ring-edge">
+              <input
+                type="checkbox"
+                checked={showPast}
+                onChange={e => setShowPast(e.target.checked)}
+                className="h-4 w-4 rounded accent-indigo-500"
+              />
+              <span className="text-sm text-slate-300">Show released ({pastCount})</span>
+            </label>
+          </div>
+        </div>
+      );
+    }
+
+    /* =========================================================================
+       APP
+       ========================================================================= */
+    function App() {
+      const [state, setState] = useState(loadState);
+      const [monthFilter, setMonthFilter] = useState('ALL');
+      const [priorityFilter, setPriorityFilter] = useState('ALL');
+      const [showPast, setShowPast] = useState(false);
+
+      useEffect(() => { saveState(state); }, [state]);
+
+      const onToggle = useCallback((releaseId, stepId) => {
+        setState(prev => {
+          const forRelease = { ...(prev[releaseId] || {}) };
+          forRelease[stepId] = !forRelease[stepId];
+          return { ...prev, [releaseId]: forRelease };
+        });
+      }, []);
+
+      const today = startOfToday().getTime();
+
+      // Decorate + sort by date.
+      const decorated = useMemo(() => {
+        return RELEASES
+          .map(r => ({ ...r, ts: parseLocalDate(r.date).getTime() }))
+          .map(r => ({ ...r, released: r.ts < today }))
+          .sort((a, b) => a.ts - b.ts || PRIORITY[a.priority].rank - PRIORITY[b.priority].rank);
+      }, [today]);
+
+      const months = useMemo(() => {
+        const set = new Set(decorated.map(r => parseLocalDate(r.date).getMonth()));
+        return [...set].sort((a, b) => a - b);
+      }, [decorated]);
+
+      const pastCount = decorated.filter(r => r.released).length;
+
+      const visible = decorated.filter(r => {
+        if (!showPast && r.released) return false;
+        if (monthFilter !== 'ALL' && parseLocalDate(r.date).getMonth() !== monthFilter) return false;
+        if (priorityFilter !== 'ALL' && r.priority !== priorityFilter) return false;
+        return true;
+      });
+
+      const stats = useMemo(() => {
+        const upcoming = decorated.filter(r => !r.released);
+        const next = upcoming[0];
+        const flagshipLeft = upcoming.filter(r => r.priority === 'FLAGSHIP' || r.priority === 'TOP').length;
+        return {
+          upcoming: upcoming.length,
+          nextLabel: next ? fmtReleaseDate(next.date) : '—',
+          flagshipLeft,
+        };
+      }, [decorated]);
+
+      return (
+        <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+          <Header stats={stats} />
+          <FilterBar
+            months={months}
+            monthFilter={monthFilter} setMonthFilter={setMonthFilter}
+            priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
+            showPast={showPast} setShowPast={setShowPast}
+            pastCount={pastCount}
+          />
+
+          <div className="space-y-4">
+            {visible.length === 0 && (
+              <div className="rounded-2xl border border-edge bg-panel/60 p-8 text-center text-slate-400">
+                No releases match these filters.
+              </div>
+            )}
+            {visible.map(r => (
+              <ReleaseCard key={r.id} release={r} state={state} onToggle={onToggle} released={r.released} />
+            ))}
+          </div>
+
+          <footer className="mt-8 border-t border-edge/60 pt-5 text-xs text-slate-500 space-y-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <span className="text-slate-400 font-medium">Alert sources:</span>
+              {DISCORDS.map(d => (
+                d.url
+                  ? <a key={d.name} href={d.url} target="_blank" rel="noreferrer" className="text-indigo-300 hover:text-indigo-200 underline decoration-dotted">{d.name}</a>
+                  : <span key={d.name} className="text-slate-400">{d.name}</span>
+              ))}
+            </div>
+            <p>Checklist progress saves to this device automatically. Dates hardcoded for 2026 (US/English).</p>
+            <p className="text-slate-600">v2 — drop-window predictor + live stock · v3 — Jacksonville in-store run planner (data shapes stubbed, not active in v1).</p>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
